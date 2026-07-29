@@ -1,0 +1,4 @@
+{
+  "question": "What is a Zod schema?",
+  "answer": "A Zod schema defines and validates the expected shape of input data."
+}

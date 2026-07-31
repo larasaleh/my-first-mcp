@@ -58,3 +58,18 @@ saved before, instantly, without her having to search or retype it.
    tools are prioritized first and fully tested; P1 tools can remain
    stubs (defined schema, placeholder response) without blocking the
    demo.
+   ## Notes from reading Filesystem MCP Server (official)
+
+- Tool names strictly follow `verb_noun` pattern (`read_text_file`, `write_file`,
+  `list_directory`, `search_files`) — matches the naming style used in this project.
+- Descriptions are one short sentence focused on what the tool does, not how
+  it's implemented internally.
+- Important constraints are stated directly in the description (e.g. "Cannot
+  specify both head and tail simultaneously"), so the model knows the limits
+  upfront instead of discovering them via an error.
+- Tools are explicitly classified as read-only vs. mutating vs. potentially
+  destructive (via readOnlyHint/destructiveHint), which is a more detailed
+  version of this project's P0/P1 priority split.
+- Error-prone behavior is spelled out plainly (e.g. "Fails if destination
+  exists") rather than left implicit — a pattern worth copying for delete_note
+  and add_faq going forward.

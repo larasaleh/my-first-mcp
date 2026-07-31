@@ -1,0 +1,17 @@
+[
+  {
+    "id": "faq-1",
+    "question": "how do I create a new branch in git?",
+    "answer": "Use the command: git checkout -b branch-name. This creates the branch and switches to it in one step."
+  },
+  {
+    "id": "faq-2",
+    "question": "what does .describe() do in Zod?",
+    "answer": "It attaches a human-readable description to a schema field, helping the model understand what value is expected there."
+  },
+  {
+    "id": "faq-3",
+    "question": "why does my tool call get rejected in Inspector?",
+    "answer": "The input probably doesn't match the tool's Zod schema — check the exact field types and required fields in your schemas file."
+  }
+]

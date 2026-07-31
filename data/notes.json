@@ -1,0 +1,17 @@
+[
+  {
+    "id": "note-1",
+    "content": "Git branches let you work on features separately from the main codebase without affecting it until you're ready to merge.",
+    "tags": ["git", "week2"]
+  },
+  {
+    "id": "note-2",
+    "content": "Zod schemas validate input shape before your tool handler runs, catching bad data early with clear error messages.",
+    "tags": ["zod", "validation"]
+  },
+  {
+    "id": "note-3",
+    "content": "MCP Inspector is a tool for testing your MCP server manually — it lists all registered tools and lets you call them with sample input.",
+    "tags": ["mcp", "inspector"]
+  }
+]

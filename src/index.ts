@@ -1,13 +1,17 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import { z } from "zod";
+import { loadNotes, loadFaqs, searchNotes, findFaqAnswer, createNote } from "./lib/notes.js";
+import { readJsonFile } from "./lib/files.js";
+import { writeFile } from "node:fs/promises";
+import { resolve } from "node:path";
 
 const MY_NAME = "Lara Saleh Jadallah Nassar";
 
 function createServer(): McpServer {
   const server = new McpServer({ name: "notes-faq-mcp", version: "0.2.0" });
 
-  // P0 — add_note: saves a new note with optional tags
+  // P0 — add_note: saves a new note with optional tags (REAL DATA)
   server.registerTool(
     "add_note",
     {
@@ -18,20 +22,29 @@ function createServer(): McpServer {
         tags: z.array(z.string()).optional().describe("Optional list of tags"),
       }),
     },
-    async (input) => {
-      // Week 2: stub only — Week 3 replaces this with real data
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({ ok: true, stub: true, tool: "add_note" }, null, 2),
-          },
-        ],
-      };
+    async ({ content, tags }) => {
+      try {
+        const notes = await loadNotes();
+        const newNote = createNote(content, tags, notes.length);
+        const updated = [...notes, newNote];
+        const dataPath = resolve(process.cwd(), "data", "notes.json");
+        await writeFile(dataPath, JSON.stringify(updated, null, 2), "utf-8");
+
+        return {
+          content: [
+            { type: "text", text: `Note saved with id ${newNote.id}: "${newNote.content}"` },
+          ],
+        };
+      } catch (err) {
+        console.error("[add_note] failed:", err);
+        return {
+          content: [{ type: "text", text: "Sorry, something went wrong while saving the note." }],
+        };
+      }
     },
   );
 
-  // P0 — search_notes: searches saved notes by keyword or tag
+  // P0 — search_notes: searches saved notes by keyword or tag (REAL DATA)
   server.registerTool(
     "search_notes",
     {
@@ -41,20 +54,34 @@ function createServer(): McpServer {
         query: z.string().describe("Search text to look for across your notes"),
       }),
     },
-    async (input) => {
-      // Week 2: stub only — Week 3 replaces this with real data
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({ ok: true, stub: true, tool: "search_notes" }, null, 2),
-          },
-        ],
-      };
+    async ({ query }) => {
+      try {
+        const notes = await loadNotes();
+        const results = searchNotes(notes, query);
+
+        if (results.length === 0) {
+          return {
+            content: [{ type: "text", text: `No notes found matching "${query}".` }],
+          };
+        }
+
+        const summary = results
+          .map((n) => `- [${n.id}] ${n.content}${n.tags ? ` (tags: ${n.tags.join(", ")})` : ""}`)
+          .join("\n");
+
+        return {
+          content: [{ type: "text", text: `Found ${results.length} note(s):\n${summary}` }],
+        };
+      } catch (err) {
+        console.error("[search_notes] failed:", err);
+        return {
+          content: [{ type: "text", text: "Sorry, something went wrong while searching notes." }],
+        };
+      }
     },
   );
 
-  // P0 — get_faq_answer: looks up a previously saved question
+  // P0 — get_faq_answer: looks up a previously saved question (REAL DATA)
   server.registerTool(
     "get_faq_answer",
     {
@@ -64,20 +91,30 @@ function createServer(): McpServer {
         question: z.string().describe("The question to look up in saved FAQ entries"),
       }),
     },
-    async (input) => {
-      // Week 2: stub only — Week 3 replaces this with real data
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({ ok: true, stub: true, tool: "get_faq_answer" }, null, 2),
-          },
-        ],
-      };
+    async ({ question }) => {
+      try {
+        const faqs = await loadFaqs();
+        const match = findFaqAnswer(faqs, question);
+
+        if (!match) {
+          return {
+            content: [{ type: "text", text: `No saved answer found for: "${question}"` }],
+          };
+        }
+
+        return {
+          content: [{ type: "text", text: match.answer }],
+        };
+      } catch (err) {
+        console.error("[get_faq_answer] failed:", err);
+        return {
+          content: [{ type: "text", text: "Sorry, something went wrong while looking up the FAQ." }],
+        };
+      }
     },
   );
 
-  // P1 — add_faq: saves a question and its answer as a reusable FAQ entry
+  // P1 stub — add_faq: saves a question and its answer as a reusable FAQ entry
   server.registerTool(
     "add_faq",
     {
@@ -89,19 +126,14 @@ function createServer(): McpServer {
       }),
     },
     async (input) => {
-      // Week 2: not implemented yet — this is a P1 tool
+      // P1 stub
       return {
-        content: [
-          {
-            type: "text",
-            text: "not implemented yet",
-          },
-        ],
+        content: [{ type: "text", text: "not implemented yet" }],
       };
     },
   );
 
-  // P1 — list_notes: lists all saved notes, optionally filtered by tag
+  // P1 stub — list_notes: lists all saved notes, optionally filtered by tag
   server.registerTool(
     "list_notes",
     {
@@ -112,19 +144,14 @@ function createServer(): McpServer {
       }),
     },
     async (input) => {
-      // Week 2: not implemented yet — this is a P1 tool
+      // P1 stub
       return {
-        content: [
-          {
-            type: "text",
-            text: "not implemented yet",
-          },
-        ],
+        content: [{ type: "text", text: "not implemented yet" }],
       };
     },
   );
 
-  // P1 — delete_note: removes a note by its ID
+  // P1 stub — delete_note: removes a note by its ID
   server.registerTool(
     "delete_note",
     {
@@ -135,14 +162,9 @@ function createServer(): McpServer {
       }),
     },
     async (input) => {
-      // Week 2: not implemented yet — this is a P1 tool
+      // P1 stub
       return {
-        content: [
-          {
-            type: "text",
-            text: "not implemented yet",
-          },
-        ],
+        content: [{ type: "text", text: "not implemented yet" }],
       };
     },
   );

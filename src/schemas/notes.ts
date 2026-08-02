@@ -38,3 +38,16 @@ export const getFaqAnswerInputSchema = z.object({
     .max(300)
     .describe("The question to look up in the saved FAQ entries"),
 });
+// Schema for validating the shape of data read from data/notes.json
+export const noteRecordSchema = z.object({
+  id: z.string(),
+  content: z.string(),
+  tags: z.array(z.string()).optional(),
+});
+
+// Schema for validating the shape of data read from data/faqs.json
+export const faqRecordSchema = z.object({
+  id: z.string(),
+  question: z.string(),
+  answer: z.string(),
+});

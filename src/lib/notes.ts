@@ -72,14 +72,26 @@ export function searchNotes(
 
 /**
  * Looks up a FAQ entry by matching keywords in the question.
- * Returns undefined if nothing matches closely enough.
+ * Requires at least 50% of the meaningful words (length > 3) in the
+ * stored FAQ question to appear in the user's question — this avoids
+ * false positives from a single common word matching (fixed after peer
+ * review from Roa Makhtoob, Week 4).
  */
 export function findFaqAnswer(faqs: Faq[], question: string): Faq | undefined {
   const lowerQuestion = question.toLowerCase();
 
   return faqs.find((faq) => {
-    const faqWords = faq.question.toLowerCase().split(/\s+/);
-    return faqWords.some((word) => word.length > 3 && lowerQuestion.includes(word));
+    const faqWords = faq.question
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((word) => word.length > 3);
+
+    if (faqWords.length === 0) return false;
+
+    const matchedWords = faqWords.filter((word) => lowerQuestion.includes(word));
+    const matchRatio = matchedWords.length / faqWords.length;
+
+    return matchRatio >= 0.5;
   });
 }
 

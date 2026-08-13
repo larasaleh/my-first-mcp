@@ -12,11 +12,15 @@ const MY_NAME = "Lara Saleh Jadallah Nassar";
 // doesn't enforce every Zod refinement (like .max()) automatically.
 const addNoteSchema = z.object({
   content: z.string().min(1).max(2000).describe("The text content of the note to save"),
-  tags: z.array(z.string().min(1).max(30)).max(10).optional().describe("Optional list of tags"),
+  tags: z.array(z.string().min(1).max(30)).max(10).optional().describe('Optional list of tags, e.g. ["work", "important"]'),
 });
 
+// Fixed after peer review (Roa Makhtoob, Week 4): `limit` is now actually
+// used by the tool, resolving the previous mismatch between this schema
+// and the registered tool's behavior.
 const searchNotesSchema = z.object({
   query: z.string().min(1).max(200).describe("Search text to look for across your notes"),
+  limit: z.number().int().positive().max(20).optional().describe("Max number of results to return, defaults to 10"),
 });
 
 const getFaqAnswerSchema = z.object({
@@ -24,7 +28,7 @@ const getFaqAnswerSchema = z.object({
 });
 
 function createServer(): McpServer {
-  const server = new McpServer({ name: "notes-faq-mcp", version: "0.3.0" });
+  const server = new McpServer({ name: "notes-faq-mcp", version: "0.3.1" });
 
   // P0 — add_note: saves a new note with optional tags (REAL DATA)
   server.registerTool(
@@ -81,19 +85,21 @@ function createServer(): McpServer {
           content: [{ type: "text", text: `Invalid input: ${parsed.error.issues[0]?.message ?? "validation failed"}` }],
         };
       }
-      const { query } = parsed.data;
+      const { query, limit } = parsed.data;
 
       try {
         const notes = await loadNotes();
         const { results, truncated } = searchNotes(notes, query);
+        const effectiveLimit = limit ?? results.length;
+        const limitedResults = results.slice(0, effectiveLimit);
 
-        if (results.length === 0) {
+        if (limitedResults.length === 0) {
           return {
             content: [{ type: "text", text: `No notes found matching "${query}".` }],
           };
         }
 
-        const summary = results
+        const summary = limitedResults
           .map((n) => `- [${n.id}] ${n.content}${n.tags ? ` (tags: ${n.tags.join(", ")})` : ""}`)
           .join("\n");
 
@@ -103,7 +109,7 @@ function createServer(): McpServer {
 
         return {
           content: [
-            { type: "text", text: `Found ${results.length} note(s):\n${summary}${truncationNote}` },
+            { type: "text", text: `Found ${limitedResults.length} note(s):\n${summary}${truncationNote}` },
           ],
         };
       } catch (err) {

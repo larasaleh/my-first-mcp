@@ -73,3 +73,5 @@ saved before, instantly, without her having to search or retype it.
 - Error-prone behavior is spelled out plainly (e.g. "Fails if destination
   exists") rather than left implicit — a pattern worth copying for delete_note
   and add_faq going forward.
+
+ 

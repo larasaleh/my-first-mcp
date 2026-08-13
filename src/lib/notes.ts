@@ -5,10 +5,12 @@ import { noteRecordSchema, faqRecordSchema } from "../schemas/notes.js";
 type Note = z.infer<typeof noteRecordSchema>;
 type Faq = z.infer<typeof faqRecordSchema>;
 
+const MAX_RESULTS = 10;
+
 /**
  * Loads and validates all notes from data/notes.json.
  * Returns an empty array if the file is missing or empty — never throws
- * for that case.
+ * for that case. Invalid individual records are skipped and logged.
  */
 export async function loadNotes(): Promise<Note[]> {
   const raw = await readJsonFile<unknown[]>("notes.json");
@@ -47,9 +49,13 @@ export async function loadFaqs(): Promise<Faq[]> {
 
 /**
  * Searches notes by keyword, matching against content or tags.
- * Case-insensitive. Returns up to 10 matches.
+ * Case-insensitive. Returns up to MAX_RESULTS matches — if more exist,
+ * `truncated` is true so the caller can tell the user.
  */
-export function searchNotes(notes: Note[], query: string): Note[] {
+export function searchNotes(
+  notes: Note[],
+  query: string,
+): { results: Note[]; truncated: boolean } {
   const lowerQuery = query.toLowerCase();
 
   const matches = notes.filter(
@@ -58,31 +64,49 @@ export function searchNotes(notes: Note[], query: string): Note[] {
       note.tags?.some((tag) => tag.toLowerCase().includes(lowerQuery)),
   );
 
-  return matches.slice(0, 10);
+  return {
+    results: matches.slice(0, MAX_RESULTS),
+    truncated: matches.length > MAX_RESULTS,
+  };
 }
 
 /**
  * Looks up a FAQ entry by matching keywords in the question.
- * Returns undefined if nothing matches closely enough.
+ * Requires at least 50% of the meaningful words (length > 3) in the
+ * stored FAQ question to appear in the user's question — this avoids
+ * false positives from a single common word matching (fixed after peer
+ * review from Roa Makhtoob, Week 4).
  */
 export function findFaqAnswer(faqs: Faq[], question: string): Faq | undefined {
   const lowerQuestion = question.toLowerCase();
 
   return faqs.find((faq) => {
-    const faqWords = faq.question.toLowerCase().split(/\s+/);
-    return faqWords.some((word) => word.length > 3 && lowerQuestion.includes(word));
+    const faqWords = faq.question
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((word) => word.length > 3);
+
+    if (faqWords.length === 0) return false;
+
+    const matchedWords = faqWords.filter((word) => lowerQuestion.includes(word));
+    const matchRatio = matchedWords.length / faqWords.length;
+
+    return matchRatio >= 0.5;
   });
 }
 
 /**
  * Creates a new note object with a generated ID. Does not persist it yet —
- * that happens in the tool handler (kept separate so this stays a pure
- * function that's easy to test).
+ * that happens in the tool handler.
  */
-export function createNote(content: string, tags: string[] | undefined, existingCount: number): Note {
+export function createNote(
+  content: string,
+  tags: string[] | undefined,
+  existingCount: number,
+): Note {
   return {
     id: `note-${existingCount + 1}`,
     content,
     tags,
   };
-} 
+}

@@ -1,0 +1,46 @@
+# Threat Model — Smart Notes & FAQ Assistant
+
+## Assets
+- **data/notes.json** — user-created notes (content + tags)
+- **data/faqs.json** — stored question/answer pairs
+- The MCP server process itself and its stdio channel
+
+## Trust Boundaries
+- Tool arguments come from the model, not a verified human — treated as
+  untrusted input, same as a public web form.
+- The server only trusts files inside the local `./data` folder; nothing
+  outside that boundary is considered readable or writable.
+- No external network calls are made by any P0 tool, so there is currently
+  no trust boundary with third-party APIs.
+
+## Top 5 Risks & Mitigations
+
+1. **Path traversal** — a malicious `content`/`id` value could try to make
+   file operations escape `./data` (e.g. via `..`).
+   *Mitigation:* `src/lib/files.ts` resolves every file path and rejects
+   any path that resolves outside `./data`. (Implemented in Week 3.)
+
+2. **Runaway responses** — `search_notes` could return an unbounded number
+   of results if the fixture data grows, overflowing the model's context.
+   *Mitigation:* results are capped at 10 matches (`.slice(0, 10)`) in
+   `searchNotes()`. Will confirm this cap is enforced consistently across
+   all list-returning tools this week.
+
+3. **Malformed/oversized input** — a very long `content` string in
+   `add_note` could bloat the data file or the tool response.
+   *Mitigation:* add a `.max()` length bound on the `content` field in the
+   Zod schema so oversized notes are rejected before they're written.
+
+4. **Secret leaks** — although no API keys are used yet, error logs
+   (`console.error`) could accidentally print full file contents or
+   internal paths if not written carefully.
+   *Mitigation:* keep error logs limited to the tool name + short reason,
+   never dump full file contents or stack traces with file paths to logs
+   that could be shared.
+
+5. **SSRF** — not currently applicable, since no P0 tool calls `fetch` or
+   any external URL. Documented here so it's revisited if a future tool
+   (e.g. a weather or quote API) is added.
+   *Mitigation (if added later):* use the shared `fetchJson` helper in
+   `src/lib/http.ts`, which enforces a timeout, and restrict allowed
+   domains explicitly rather than accepting arbitrary URLs from input.

@@ -44,3 +44,28 @@
    *Mitigation (if added later):* use the shared `fetchJson` helper in
    `src/lib/http.ts`, which enforces a timeout, and restrict allowed
    domains explicitly rather than accepting arbitrary URLs from input.
+
+   ## Out of Scope
+
+The following are deliberately not addressed in this threat model, since
+they go beyond what's reasonable for a student learning project at this
+stage:
+
+- **Authentication / authorization** — this is a single-user local tool
+  with no user accounts, so access control is not implemented. This is
+  acceptable because the server only runs locally on the developer's own
+  machine for demo purposes, not as a hosted multi-user service.
+- **Denial of Service (DoS) protection** — no rate limiting is implemented
+  on tool calls. This is acceptable because the server runs locally via
+  stdio for a single client (the model/Inspector), not exposed to the
+  public internet where DoS attacks would be a realistic threat.
+- **Encryption at rest** — `data/notes.json` and `data/faqs.json` are
+  stored as plain text on disk. This is acceptable because the data is
+  non-sensitive (student's own study notes/FAQs) and the project has no
+  requirement to protect against local disk access, which would require
+  physical or OS-level access already.
+- **Formal penetration testing / third-party security audit** — out of
+  scope for a course project; testing here is limited to manual attack
+  simulation (path traversal, oversized/empty input) via MCP Inspector and
+  direct schema testing, which is proportional to the project's size and
+  risk profile.

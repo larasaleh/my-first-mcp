@@ -50,6 +50,10 @@ sample input and see the response.
 
 ## Example Prompts
 
+See [`examples/conversations.md`](./examples/conversations.md) for full 
+example conversations showing tool calls and expected responses.
+
+
 Once connected to an AI assistant, you can say things like:
 
 - "Save a note that Git branches let you work on features separately, tag it 'git'."

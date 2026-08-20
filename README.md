@@ -37,6 +37,26 @@ npx @modelcontextprotocol/inspector npx tsx src/index.ts
 This opens a browser-based UI where you can call each tool directly with
 sample input and see the response.
 
+## Connecting to Claude Desktop
+
+To use this server with Claude Desktop, add it to your Claude Desktop
+configuration file (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "notes-faq-mcp": {
+      "command": "npx",
+      "args": ["tsx", "/absolute/path/to/my-first-mcp/src/index.ts"]
+    }
+  }
+}
+```
+
+Replace `/absolute/path/to/my-first-mcp` with the full path to where you
+cloned this repository. Restart Claude Desktop after saving the file, and
+the tools should appear as available.
+
 ## Tools
 
 | Tool | Status | Description |
@@ -50,23 +70,14 @@ sample input and see the response.
 
 ## Example Prompts
 
-See [`examples/conversations.md`](./examples/conversations.md) for full 
+See [`examples/conversations.md`](./examples/conversations.md) for full
 example conversations showing tool calls and expected responses.
-
 
 Once connected to an AI assistant, you can say things like:
 
 - "Save a note that Git branches let you work on features separately, tag it 'git'."
 - "Search my notes for anything about Zod."
 - "What did I write down about how to create a new branch in git?"
-
-## Architecture
-
-- `src/index.ts` — server entry point, registers all 6 tools
-- `src/lib/notes.ts` — pure functions for loading, searching, and creating notes/FAQs
-- `src/lib/files.ts` — safe file reading, restricted to the `data/` folder (protects against path traversal)
-- `src/schemas/notes.ts` — Zod schemas for tool input and stored data validation
-- `data/notes.json` / `data/faqs.json` — local JSON fixtures, no external API or database required
 
 ## Troubleshooting
 
@@ -85,6 +96,21 @@ the tool's schema (e.g. an empty string, or `tags` sent as a string
 instead of an array like `["work", "important"]`). Check the field
 description shown in Inspector for the expected format.
 
+## License
+
+This project is part of the NextFlows Academy training cohort and is
+intended for educational purposes.
+
+---
+
+## Architecture
+
+- `src/index.ts` — server entry point, registers all 6 tools
+- `src/lib/notes.ts` — pure functions for loading, searching, and creating notes/FAQs
+- `src/lib/files.ts` — safe file reading, restricted to the `data/` folder (protects against path traversal)
+- `src/schemas/notes.ts` — Zod schemas for tool input and stored data validation
+- `data/notes.json` / `data/faqs.json` — local JSON fixtures, no external API or database required
+
 ## Security
 
 See [`SECURITY.md`](./SECURITY.md) for details on input validation, path
@@ -97,11 +123,6 @@ traversal protection, and how to report a security issue.
 - [`docs/threat-model.md`](./docs/threat-model.md) — security threat model and mitigations
 - [`docs/review-checklist.md`](./docs/review-checklist.md) — peer review notes and action items
 - [`docs/test-plan.md`](./docs/test-plan.md) — manual test plan and results
-
-## License
-
-This project is part of the NextFlows Academy training cohort and is
-intended for educational purposes.
 
 ---
 

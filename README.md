@@ -79,6 +79,16 @@ Once connected to an AI assistant, you can say things like:
 - "Search my notes for anything about Zod."
 - "What did I write down about how to create a new branch in git?"
 
+## Running Tests
+
+```bash
+npm test
+```
+
+Runs automated smoke tests (Node's built-in test runner) for the pure
+helper functions in `src/lib/notes.ts` — `searchNotes` and
+`findFaqAnswer`. All 5 tests currently pass.
+
 ## Troubleshooting
 
 **1. `npm run dev` fails with "npm.ps1 cannot be loaded" (PowerShell error)**

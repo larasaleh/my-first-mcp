@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve, relative } from "node:path";
 
-const DATA_DIR = resolve(process.cwd(), "data");
+const DATA_DIR = resolve(import.meta.dirname, "..", "..", "data");
 
 /**
  * Safely reads and parses a JSON file, but only if it lives inside
